@@ -1,0 +1,8 @@
+[admin]
+  password = __PASSWORD__
+  actions = SET
+  instcmds = ALL
+
+[monuser]
+  password = __MONITOR_PASSWORD__
+  upsmon master
