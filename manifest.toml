@@ -58,8 +58,8 @@ ram.runtime = "50M"
     [resources.sources]
 
     [resources.sources.main]
-    url = "https://github.com/JuanCF/nutwatch/archive/refs/tags/v1.3.0.tar.gz"
-    sha256 = "7e452b23eece1cf1a2949d96c55eeddd4c36ba432fb4cbbd0fa13f31b030dbbc"
+    url = "https://github.com/JuanCF/nutwatch/releases/download/v1.3.0/nutwatch.tar.gz"
+    sha256 = "8148c45a26a8bac8fe74f148b88854eed16f854451945051f314800a1c9302ff"
     autoupdate.strategy = "latest_github_tag"
 
     [resources.system_user]
