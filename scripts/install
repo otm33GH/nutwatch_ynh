@@ -32,13 +32,6 @@ if [ "$install_only" = "0" ]; then
 fi
 
 #=================================================
-# INITIALIZE AND STORE SETTINGS
-#=================================================
-
-auth_secret=$(ynh_string_random --length=32)
-ynh_app_setting_set --key=auth_secret --value=$auth_secret
-
-#=================================================
 # DOWNLOAD, CHECK AND UNPACK SOURCE
 #=================================================
 ynh_script_progression "Setting up source files..."
@@ -48,13 +41,6 @@ ynh_script_progression "Setting up source files..."
 #=================================================
 # INSTALL AND BUILD THE APP
 #=================================================
-
-ynh_script_progression "Installing and building the $app's frontend..."
-
-pushd "$install_dir/src/frontend"
-ynh_hide_warnings ynh_exec_as_app npm ci
-ynh_hide_warnings ynh_exec_as_app npm run build
-popd
 
 ynh_script_progression "Installing and building the $app's backend..."
 
