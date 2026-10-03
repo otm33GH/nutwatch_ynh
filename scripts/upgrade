@@ -1,0 +1,69 @@
+#!/bin/bash
+
+#=================================================
+# IMPORT GENERIC HELPERS
+#=================================================
+
+source _common.sh
+source /usr/share/yunohost/helpers
+
+#=================================================
+# STOP SYSTEMD SERVICE
+#=================================================
+ynh_script_progression "Stopping $app's systemd service..."
+
+    ynh_systemctl --service="$app" --action="stop"
+
+#=================================================
+# DOWNLOAD, CHECK AND UNPACK SOURCE
+#=================================================
+ynh_script_progression "Upgrading source files..."
+
+    ynh_setup_source --dest_dir="$install_dir" --full_replace=1 --keep=".next/standalone/config/settings.yml"
+
+#=================================================
+# UPDATE A CONFIG FILE
+#=================================================
+ynh_script_progression "Updating $app's configuration files..."
+
+    ynh_config_add --template=".env" --destination="$install_dir/.env"
+
+#=================================================
+# REAPPLY SYSTEM CONFIGURATION
+#=================================================
+ynh_script_progression "Upgrading system configurations related to $app..."
+
+    ynh_config_add_nginx
+    
+    ynh_config_add_systemd
+
+    yunohost service add $app --description="PeaNUT Dashboard" --log="/var/log/$app/$app.log"
+    ynh_config_add_logrotate
+
+#=================================================
+# INSTALL AND BUILD THE APP
+#=================================================
+
+pushd $install_dir
+npm install --global corepack@latest
+corepack enable pnpm
+ynh_exec_as_app corepack use pnpm@10.25.0
+ynh_script_progression "Installing the $app..."
+    ynh_hide_warnings ynh_exec_as_app NODE_OPTIONS="--max-old-space-size=4096" pnpm install --frozen-lockfile
+
+ynh_script_progression "Building the $app..."
+    ynh_hide_warnings ynh_exec_as_app NODE_OPTIONS="--max-old-space-size=4096" pnpm run build:local
+popd 
+
+#=================================================
+# START SYSTEMD SERVICE
+#=================================================
+ynh_script_progression "Starting $app's systemd service..."
+    
+    ynh_systemctl --service="$app" --action="start"
+
+#=================================================
+# END OF SCRIPT
+#=================================================
+
+ynh_script_progression "Upgrade of $app completed"

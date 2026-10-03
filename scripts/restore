@@ -1,0 +1,51 @@
+#!/bin/bash
+
+source /usr/share/yunohost/helpers
+
+#=================================================
+# RESTORE THE APP MAIN DIR
+#=================================================
+ynh_script_progression "Restoring the app main directory..."
+
+    ynh_restore "$install_dir"
+
+ynh_script_progression "Reinstall pnpm..."
+
+    npm install --global corepack@latest
+    corepack enable pnpm
+
+pushd "$install_dir"
+    ynh_exec_as_app corepack use pnpm@10.25.0
+popd
+
+    chown -R $app:$app $install_dir
+    
+    mkdir -p /var/log/$app
+    chown $app:$app /var/log/$app
+
+#=================================================
+# RESTORE SYSTEM CONFIGURATIONS
+#=================================================
+ynh_script_progression "Restoring system configurations related to $app..."
+
+    ynh_restore "/etc/nginx/conf.d/$domain.d/$app.conf"
+    
+    ynh_config_add_systemd --service="$app" --template="systemd.service"
+    
+    yunohost service add $app --description="PeaNUT Dashboard" --log="/var/log/$app/$app.log"
+    ynh_systemctl --service=$app --action="start"  --timeout=600
+
+#=================================================
+# RELOAD NGINX AND PHP-FPM OR THE APP SERVICE
+#=================================================
+ynh_script_progression "Reloading NGINX web server and $app's service..."
+    
+    ynh_systemctl --service=nginx --action=reload
+    
+    ynh_systemctl --service=$app --action="start" --log_path="systemd"  --timeout=600
+
+#=================================================
+# END OF SCRIPT
+#=================================================
+
+ynh_script_progression "Restoration completed for $app"

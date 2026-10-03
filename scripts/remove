@@ -1,0 +1,22 @@
+#!/bin/bash
+
+source /usr/share/yunohost/helpers
+
+#=================================================
+# REMOVE SYSTEM CONFIGURATIONS
+#=================================================
+ynh_script_progression "Removing system configurations related to $app..."
+
+ynh_systemctl --service=$app --action="stop"
+
+yunohost service remove $app
+
+ynh_config_remove_systemd "$app" 
+
+ynh_config_remove_nginx
+
+#=================================================
+# END OF SCRIPT
+#=================================================
+
+ynh_script_progression "Removal of $app completed"
