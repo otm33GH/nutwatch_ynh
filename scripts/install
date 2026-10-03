@@ -16,6 +16,19 @@ if [ "$install_only" = "0" ]; then
     fi   
     apt-get install -y --no-install-recommends \
         nut-server nut-client
+    sleep 30
+    cp --archive "../conf/nut/." /"/etc/nut/"
+    mkdir -p /etc/nut/notify.d /var/log/nut
+
+    cp "$install_dir/scripts/notifycmd.sh" /etc/nut/notifycmd.sh
+    chmod 750 /etc/nut/notifycmd.sh
+
+    install -o root -g root -m 755 "$install_dir/scripts/nutwatch-wol-dispatch" /usr/local/bin/nutwatch-wol-dispatch
+    ynh_replace --match="/opt/nutwatch" --replace="$install_dir" --file=/usr/local/bin/nutwatch-wol-dispatch
+    chown -R root:nut /etc/nut
+    usermod -aG nut "$app"
+    setfacl -R -m u:nut:rX "$install_dir"
+    
 fi
 
 #=================================================
