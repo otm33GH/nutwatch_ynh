@@ -77,6 +77,9 @@ ynh_script_progression "Starting $app's systemd service..."
     ynh_systemctl --service="$app" --action="start"
 
     systemctl enable nut-server nut-monitor --quiet 2>/dev/null || true
+    systemctl start "nut-driver@${nut_ups_name}" 2>/dev/null || true
+    systemctl restart nut-server nut-monitor 2>/dev/null || true
+
 
 #=================================================
 # END OF SCRIPT
