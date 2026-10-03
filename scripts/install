@@ -44,12 +44,12 @@ ynh_script_progression "Setting up source files..."
 
 ynh_script_progression "Installing and building the $app's backend..."
 
-pushd "$install_dir/src/backend"
+pushd "$install_dir"
 
   python3 -m venv venv
   source venv/bin/activate
   ynh_script_progression "Installing python dependencies..."
-  ynh_hide_warnings pip install --no-cache-dir -r requirements/base.txt
+  ynh_hide_warnings pip install --no-cache-dir -r requirements.txt
 popd 
 
 #=================================================
