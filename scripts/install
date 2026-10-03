@@ -7,6 +7,18 @@
 source /usr/share/yunohost/helpers
 
 #=================================================
+# CHECK IF NUT IS ALREADY INSTALLED
+#=================================================
+
+if [ "$install_only" = "0" ]; then
+    if [ -d /etc/nut ]; then
+        ynh_die "NUT is already installed or was installed but /etc/nut is still present."
+    fi   
+    apt-get install -y --no-install-recommends \
+        nut-server nut-client
+fi
+
+#=================================================
 # INITIALIZE AND STORE SETTINGS
 #=================================================
 
@@ -21,28 +33,24 @@ ynh_script_progression "Setting up source files..."
     ynh_setup_source --dest_dir="$install_dir"
 
 #=================================================
-# APP INITIAL CONFIGURATION
-#=================================================
-ynh_script_progression "Adding $app's configuration files..."
-
-    ynh_config_add --template=".env" --destination="$install_dir/.next/standalone/config/.env"
-
-#=================================================
 # INSTALL AND BUILD THE APP
 #=================================================
 
-pushd $install_dir
-npm install --global corepack@latest
-corepack enable pnpm
-ynh_exec_as_app corepack use pnpm@10.25.0
-ynh_script_progression "Installing the $app..."
-    ynh_hide_warnings ynh_exec_as_app NODE_OPTIONS="--max-old-space-size=4096" pnpm install --frozen-lockfile
+ynh_script_progression "Installing and building the $app's frontend..."
 
-ynh_script_progression "Building the $app..."
-    ynh_hide_warnings ynh_exec_as_app NODE_PTIONS="--max-old-space-size=4096" pnpm run build:local
-    ynh_config_add --template="settings.yml" --destination="$install_dir/.next/standalon/config/settings.yml"
-    hash_password=$(bcrypt "$password")
-    ynh_config_add --template="auth.yaml" --destination="$install_dir/.next/standalon/config/auth.yml"
+pushd "$install_dir/src/frontend"
+ynh_hide_warnings ynh_exec_as_app npm ci
+ynh_hide_warnings ynh_exec_as_app npm run build
+popd
+
+ynh_script_progression "Installing and building the $app's backend..."
+
+pushd "$install_dir/src/backend"
+
+  python3 -m venv venv
+  source venv/bin/activate
+  ynh_script_progression "Installing python dependencies..."
+  ynh_hide_warnings pip install --no-cache-dir -r requirements/base.txt
 popd 
 
 #=================================================
@@ -51,7 +59,7 @@ popd
 ynh_script_progression "Adding system configurations related to $app..."
 
     ynh_config_add_systemd
-    yunohost service add $app --description="PeaNUT Dashboard" --log="/var/log/$app/$app.log"
+    yunohost service add $app --description="Nutwatch Dashboard" --log="/var/log/$app/$app.log"
     ynh_config_add_logrotate
     
     ynh_config_add_nginx
